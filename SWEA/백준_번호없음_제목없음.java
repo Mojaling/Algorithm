@@ -1,77 +1,66 @@
-import java.util.*;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.util.StringTokenizer;
 
+/**
+ * 스위치 블록(16진수 문자) -> 스위치 자세(2진수 4자리) 복원
+ *
+ * 핵심 아이디어
+ *  - 글자 하나 = 스위치 4개 = 0~15 사이의 값 하나
+ *  - 그 값을 "항상 4자리"의 2진수로 펼쳐서 이어 붙이면 끝
+ *  - 앞쪽 0도 반드시 남겨야 하므로 Integer.toBinaryString() 같은 걸
+ *    그냥 쓰면 안 되고(예: 4 -> "100"), 4자리 고정 출력이 필요하다.
+ */
 public class Solution {
 
     public static void main(String[] args) throws Exception {
+        // SWEA에서 입력 파일(16780_input.txt)로 테스트하려면 아래 주석을 풀면 된다.
+        // System.setIn(new java.io.FileInputStream("res/16780_input.txt"));
 
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 
-        // 테스트 케이스 개수
-        int T = Integer.parseInt(br.readLine());
+        // 출력이 최대 50줄 x 400자라 그리 크진 않지만,
+        // 매번 println 하는 것보다 StringBuilder에 모아 한 번에 내보내는 게 빠르다.
+        StringBuilder sb = new StringBuilder();
+
+        int T = Integer.parseInt(br.readLine().trim()); // 테스트 케이스 수
 
         for (int tc = 1; tc <= T; tc++) {
-
-            // 환자의 수
-            int N = Integer.parseInt(br.readLine());
-
-            int[] times = new int[N];
-
-            // 한 줄에 주어진 N명의 진료시간을 읽는다.
+            // 한 줄에 "N 설정코드" 형태로 들어오므로 공백 기준으로 쪼갠다.
             StringTokenizer st = new StringTokenizer(br.readLine());
+            int N = Integer.parseInt(st.nextToken()); // 글자 수
+            String code = st.nextToken();             // 설정 코드 (길이 N)
 
+            sb.append('#').append(tc).append(' ');
+
+            // 왼쪽 글자부터 순서대로 처리
             for (int i = 0; i < N; i++) {
-                times[i] = Integer.parseInt(st.nextToken());
+                int value = hexValue(code.charAt(i)); // 글자 -> 0~15
+
+                // 가장 왼쪽 스위치가 큰 자리이므로 3번 비트부터 0번 비트 순으로 꺼낸다.
+                // (value >> bit) & 1 은 value의 bit번째 비트만 남기는 표준적인 방법.
+                for (int bit = 3; bit >= 0; bit--) {
+                    sb.append((value >> bit) & 1);
+                }
             }
 
-            /*
-             * 핵심 1.
-             *
-             * 총 대기시간을 최소화하려면
-             * 진료시간이 짧은 환자부터 진료해야 한다.
-             *
-             * 예:
-             * 3 1 2
-             *
-             * 정렬 후
-             * 1 2 3
-             */
-            Arrays.sort(times);
-
-            /*
-             * currentWait
-             * = 현재 환자가 기다려야 하는 시간
-             *
-             * totalWait
-             * = 모든 환자의 대기시간의 합
-             *
-             * long을 사용하는 이유:
-             * N과 진료시간이 커지면 합계가 int보다
-             * 커질 가능성을 안전하게 대비하기 위해서이다.
-             */
-            long currentWait = 0;
-            long totalWait = 0;
-
-            for (int i = 0; i < N; i++) {
-
-                /*
-                 * 현재 환자가 기다린 시간을
-                 * 전체 대기시간에 더한다.
-                 *
-                 * 첫 번째 환자는 앞사람이 없으므로
-                 * currentWait = 0이다.
-                 */
-                totalWait += currentWait;
-
-                /*
-                 * 현재 환자의 진료가 끝나면
-                 * 다음 환자는 이 환자의 진료시간만큼
-                 * 추가로 기다려야 한다.
-                 */
-                currentWait += times[i];
-            }
-
-            System.out.println("#" + tc + " " + totalWait);
+            sb.append('\n');
         }
+
+        System.out.print(sb);
+    }
+
+    /**
+     * 16진수 글자 하나를 정수 값(0~15)으로 바꾼다.
+     * '0'~'9' -> 0~9,  'A'~'F' -> 10~15
+     *
+     * 문자끼리 빼면 아스키 코드 차이가 나온다는 성질을 이용한 것.
+     * (Character.digit(c, 16) 으로 대체해도 결과는 같다.)
+     */
+    private static int hexValue(char c) {
+        if (c >= '0' && c <= '9') {
+            return c - '0';
+        }
+        return c - 'A' + 10; // 문제 조건상 대문자 A~F만 들어온다
     }
 }
