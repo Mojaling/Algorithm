@@ -1,66 +1,75 @@
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.util.StringTokenizer;
+import java.io.*;
+import java.util.*;
 
-public class Solution {
+public class Solution{
+	/*
+	 * 1~N 구역. 국경 맞닿은 곳있음.
+	 * 색상 모두 K가지. 인접한 두 구역은 다른 색으로.
+	 * 
+	 * 
+	 */
+	static int N;
+	static int M;
+	static int K;
+	static int[] colors;
+	static boolean[][] connected;
+	static int count;
+	public static void main(String[] args) throws Exception{
+		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+		int T = Integer.parseInt(br.readLine());
+		for(int times=1; times<=T;times++) {
+			StringTokenizer st = new StringTokenizer(br.readLine());
+			N = Integer.parseInt(st.nextToken());//N은 구역의 수
+			M = Integer.parseInt(st.nextToken());//M은 인접 관계의수
+			K = Integer.parseInt(st.nextToken());//K는 색의 수
+			
+			colors = new int[N+1];//색 안칠한건 0이라 생각하기.
+			count = 0;
+			connected = new boolean[N+1][N+1];//1~N
+			for(int i=0;i<M;i++) {
+				st = new StringTokenizer(br.readLine());
+				int from = Integer.parseInt(st.nextToken());
+				int to = Integer.parseInt(st.nextToken());
+				connected[from][to]=true;
+				connected[to][from]=true;
+			}
+			
+			dfs(1);
+			System.out.printf("#%d %d%n",times, count);
+		}
+	}
+	
+	static void dfs(int index) {
 
-    static int N, M, K;
-    static boolean[][] adj;
-    static int[] color;
-    static long answer;
+	    if (index == N + 1) {
+	        count++;
+	        return;
+	    }
 
-    public static void main(String[] args) throws Exception {
-        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        StringBuilder sb = new StringBuilder();
+	    for (int color = 1; color <= K; color++) {
 
-        int T = Integer.parseInt(br.readLine().trim());
+	        boolean possible = true;
 
-        for (int tc = 1; tc <= T; tc++) {
-            StringTokenizer st = new StringTokenizer(br.readLine());
-            N = Integer.parseInt(st.nextToken());
-            M = Integer.parseInt(st.nextToken());
-            K = Integer.parseInt(st.nextToken());
+	        for (int i = 1; i <= N; i++) {
 
-            adj = new boolean[N + 1][N + 1];
-            color = new int[N + 1];
-            answer = 0;
+	            if (connected[index][i] || connected[i][index]) {
 
-            for (int i = 0; i < M; i++) {
-                st = new StringTokenizer(br.readLine());
-                int a = Integer.parseInt(st.nextToken());
-                int b = Integer.parseInt(st.nextToken());
-                adj[a][b] = true;
-                adj[b][a] = true;
-            }
+	                if (colors[i] == color) {
+	                    possible = false;
+	                    break;
+	                }
+	            }
+	        }
 
-            dfs(1);
+	        if (possible) {
 
-            sb.append('#').append(tc).append(' ').append(answer).append('\n');
-        }
+	            colors[index] = color;
 
-        System.out.print(sb);
-    }
+	            dfs(index + 1);
 
-    static void dfs(int node) {
-        if (node > N) {
-            answer++;
-            return;
-        }
-
-        for (int c = 1; c <= K; c++) {
-            if (!canPaint(node, c)) continue;
-            color[node] = c;
-            dfs(node + 1);
-            color[node] = 0;
-        }
-    }
-
-    static boolean canPaint(int node, int c) {
-        for (int prev = 1; prev < node; prev++) {
-            if (adj[node][prev] && color[prev] == c) {
-                return false;
-            }
-        }
-        return true;
-    }
+	            colors[index] = 0;
+	        }
+	    }
+	}
+	
 }
